@@ -43,12 +43,48 @@ Faceted HTTPheaders2 by:
 
 
 Psudo code for next step:
-if HTTPstatus3 is not null add value to new column X
+if HTTPstatus3 is not null:
+	if value does not equal "error getting status2"
+		add value of status3 to new column X
+	else
+		add value of status2 to column X 
+		(I found that over 133 of the 139 instences of an "error getting status2" were elsevier links that used "http://linkinghub.elsevier.com/retrieve", which is probably what created the unusual error)
+
 ifelse HTTPstatus2 is not null add value to column X
 else
 	add value from HTTPstatus to column X
-Add column for:
+
+if HTTPheaders3 == "error getting status2" and status2 == 302:
+	URL is broken
+if HTTPheaders3 == "error getting status2" and status2 == 301:
+	URL is active
+
+
+Add "statusOverview" column for:
 	if 200, 301, 302:
 		ACTIVE
 	else:
 		BROKEN
+
+
+Run get_citation_count_data_ADS_API on data:
+Open csv (hardcoded location) with a column of DOIs |
+takes DOIs from dataframe |
+Uses ADS API to search by DOI and return citation_count and pubdate  (publication date) |
+Makes each into a list |
+Adds lists to dataframe as new columns |
+Outputs to csv (hardcoded location)
+
+Add a column for year based on the date in the new csv
+
+
+
+Group by DOI
+For each DOI: # of links, year published
+	# of links per article per year
+
+Citations overtime by article
+	DOI of paper, # of citation
+
+Exclude duplicates based on DOI!
+
