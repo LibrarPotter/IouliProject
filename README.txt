@@ -34,37 +34,31 @@ Workflow:
 -- the new columns are: HTTPstatus2, HTTPheaders2, and URL2 (these are based on the reference location given in the header from the first status call.  AKA These columns have the same info as the original Status, Header, and URL information but the URL used to populate them was given in the header of the first URL) The 2 at the end signifies that this is the second URL that I tried use to get to the correct page.
 - run check_locations_for_300 again but change input "status" and "header" from column: "HTTPstatus" and "HTTPheaders" to "HTTPstatus2" and "HTTPheaders2" (so that the status and the header used by the script are from the second URL).
 -- this adds 3 more columns: HTTPstatus3, HTTPheaders3, and URL3.  The three indicates that this is the third URL that I tried programatically.
+-- Use AddTheStatusListAndStatusOverviewColumn.ipynb to add "TheStatusList" column for the final status code and a "StatusOverview" column for if we are classifying the links as Active or Broken. 
+-- Essentially what that code does:
+	Psudo code for next step:
+	if HTTPstatus3 is not null:
+		if value does not equal "error getting status2"
+			add value of status3 to new column X
+		else
+			add value of status2 to column X 
+			(I found that over 133 of the 139 instences of an "error getting status2" were elsevier links that used 	"http://linkinghub.elsevier.com/retrieve", which is probably what created the unusual error)
 
-
-In order to find patterns using OpenRefine:
-Faceted HTTPheaders2 by:
-	contains(value, (substring(cells["URL2"].value, 7))) #this allows me to see if HTTPheaders2 contains an almost identical string to the contents of URL2.  My goal is to see if the redirect is essentially the same as URL2 or not.
-
-
-
-Psudo code for next step:
-if HTTPstatus3 is not null:
-	if value does not equal "error getting status2"
-		add value of status3 to new column X
+	ifelse HTTPstatus2 is not null:
+		add value to column X
 	else
-		add value of status2 to column X 
-		(I found that over 133 of the 139 instences of an "error getting status2" were elsevier links that used "http://linkinghub.elsevier.com/retrieve", which is probably what created the unusual error)
+		add value from HTTPstatus to column X
 
-ifelse HTTPstatus2 is not null add value to column X
-else
-	add value from HTTPstatus to column X
+	if HTTPheaders3 == "error getting status2" and status2 == 302:
+		URL is broken
+	if HTTPheaders3 == "error getting status2" and status2 == 301:
+		URL is active
 
-if HTTPheaders3 == "error getting status2" and status2 == 302:
-	URL is broken
-if HTTPheaders3 == "error getting status2" and status2 == 301:
-	URL is active
-
-
-Add "statusOverview" column for:
-	if 200, 301, 302:
-		ACTIVE
-	else:
-		BROKEN
+	Add "statusOverview" column for:
+		if 200, 301, 302:
+			ACTIVE
+		else:
+			BROKEN
 
 
 Run get_citation_count_data_ADS_API on data:
@@ -78,7 +72,6 @@ Outputs to csv (hardcoded location)
 Add a column for year based on the date in the new csv
 
 
-
 Group by DOI
 For each DOI: # of links, year published
 	# of links per article per year
@@ -88,3 +81,24 @@ Citations overtime by article
 
 Exclude duplicates based on DOI!
 
+
+Used the GREL filter:  contains(value, "msa_hp")
+	to create column "OhioState", which contains exclusively links to the ohio state archives
+	This method does not perfectly sort out all links to the archive, but it only leaves behind aproximately 12 broken links (half of which are marked as ACTIVE due to their status of 302 and half are marked BROKEN because status 404)
+
+
+
+~~~~Working on~~~
+Y = percentage of broken links
+x = year of publication 
+Personal vs Curated archive
+
+Request from Iouli
+ 1) citations to JMS papers (published in 1992,1993) in HITRAN1996 per paper per year, 2) same for random papers, 3) average citations per year for both samples
+
+He will use the plots from Chris with the 10 DOIs and the random selection
+
+10 papers in HITRAN (Citations/year)
+papers not in HITRAN (citations/year)
+
+Needs percentage plot
