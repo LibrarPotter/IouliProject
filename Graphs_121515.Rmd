@@ -1,0 +1,126 @@
+---
+title: "Iloui"
+author: "Daina"
+date: "December 15, 2015"
+output: html_document
+---
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Preprocessing for density chart
+raw1 <- read.csv("JMoSp_noLink_ready_for_processing.csv")
+str(raw1)
+colnames(raw1)
+keeps1 <- c("Non_self_referencial_link","citationCount", "dateYear")
+link_data1 <- raw1[keeps1]
+
+raw2 <- read.csv("JMoSp_records_ready_for_processing.csv")
+keeps2 <- c("Non_self_referencial_link","citationCount", "dateYear")
+link_data2 <- raw2[keeps2]
+
+link_data <- rbind(link_data1,link_data2)
+
+colnames(link_data) <- c("Links", "Citations", "Year") 
+
+# Preprocessing for histogram
+keeps3 <- c("Column","StatusOverview", "dateYear")
+chart2 <- raw2[keeps3]
+
+colnames(chart2) <- c("number", "Status", "Year") 
+chart2$number <- factor(chart2$number)
+chart2$Year <- factor(chart2$Year)
+str(chart2)
+```
+
+Plotting based on the pre-processed data
+```{r, warning=FALSE, message=FALSE}
+# Desity plots (all data including Ohio State links)
+link_data$Links <- factor(link_data$Links)
+
+l <- ggplot(link_data, aes(x = Citations, fill = Links)) + 
+  geom_density(alpha = .3) +
+  facet_grid(Year ~.) +
+  scale_fill_manual( values = c("green","blue"))
+l
+
+# Desity plots of just 2007 - 2014 (all data including Ohio State links)
+target <- c("2007","2008","2009","2010","2011","2012","2013","2014")
+sub_link_data <- filter(link_data, Year %in% target)
+
+l2 <- ggplot(sub_link_data, aes(x = Citations, fill = Links)) + 
+  geom_density(alpha = .3) +
+  facet_grid(Year ~.) +
+  scale_fill_manual( values = c("green","blue"))
+ls <- l2 + xlab("Citations") + ylab("Density") + ggtitle("Number of Citations for Papers with and without Links")
+ls
+
+ggsave('l2.png', height = 11, width = 8.5)
+
+# Bar plot for all data (Percentage)
+
+c <- ggplot(chart2, aes(x = Year, fill = Status)) +  
+        geom_bar(aes(y = (..count..)/sum(..count..)),position="dodge") + 
+        scale_y_continuous(labels=percent)
+c <- c + xlab("Year") + ylab("Percentage") + ggtitle("Broken and Active Links by Year With Ohio State Links")
+c
+
+ggsave('c.png', height = 8, width = 8.5)
+```
+
+Try the same plot without links from Ohio State's Repo
+```{r, message=FALSE, warning=FALSE}
+# Data with Ohio State Column
+oh_data <- read.csv("JMoSp_records_w_OhioStateColumn_ready_for_processing.csv")
+
+# Remove all records to OhioState Repo
+no_oh <- filter(oh_data, OhioState == "false")
+
+# Process for plot 2
+keep <- c("Column","StatusOverview", "dateYear")
+chart3 <- no_oh[keep]
+colnames(chart3) <- c("number", "Status", "Year") 
+chart3$number <- factor(chart3$number)
+chart3$Year <- factor(chart3$Year)
+
+# Broken vs. active links without Ohio State Repo (Percent)
+p <- ggplot(chart3, aes(x = Year, fill = Status)) +  
+        geom_bar(aes(y = (..count..)/sum(..count..)),position="dodge") + 
+        scale_y_continuous(labels=percent)
+p <- p + xlab("Year") + ylab("Percentage") + ggtitle("Broken and Active Links by Year without Ohio State Links")
+p
+
+ggsave('p.png', height = 8, width = 8.5)
+```
+
+Examine trends in deposit activity between Ohio State (recommended) vs. researchers' choice sites
+```{r}
+# restructuring
+head(oh_data)
+oh_data$OhioState <- factor(oh_data$OhioState)
+keeps <- c("OhioState", "dateYear")
+prop_time <- oh_data[keeps]
+head(prop_time)
+prop_time$dateYear <- factor(prop_time$dateYear)
+str(prop_time)
+
+y <- table(prop_time$dateYear, prop_time$OhioState)
+y <- prop.table(y) # percentages
+y <- as.data.frame(y)
+colnames(y) <- c("Year", "OhioState", "Percentage")
+str(y)
+
+# Plotting
+y_plot <- ggplot(y, aes(x=Year, y=Percentage, group=OhioState, colour=OhioState)) +
+    geom_line(size=1) +
+    geom_point(size=3)
+y_plot <- y_plot + xlab("Year") + ylab("Percentage") + ggtitle("Percentage of Links to Ohio State and Other Locations")
+y_plot
+
+ggsave('y_plot.png', height = 8, width = 8.5)
+```
