@@ -82,23 +82,14 @@ Citations overtime by article
 Exclude duplicates based on DOI!
 
 
-Used the GREL filter:  contains(value, "msa_hp")
-	to create column "OhioState", which contains exclusively links to the ohio state archives
-	This method does not perfectly sort out all links to the archive, but it only leaves behind aproximately 12 broken links (half of which are marked as ACTIVE due to their status of 302 and half are marked BROKEN because status 404)
-
+Used the GREL filter:  
+	isNotNull(value.match(/.*jmsa_hp.*|.*dx\.doi.*/))
+	to create column "trustedRepo", which contains true or false info.  True == Ohio State or if it is a link to a doi.  If it's a doi that means that it is in a trusted repo, because it has to be compliant with DOI requirements.
 
 
 ~~~~Working on~~~
 Y = percentage of broken links
 x = year of publication 
 Personal vs Curated archive
+line plot
 
-Request from Iouli
- 1) citations to JMS papers (published in 1992,1993) in HITRAN1996 per paper per year, 2) same for random papers, 3) average citations per year for both samples
-
-He will use the plots from Chris with the 10 DOIs and the random selection
-
-10 papers in HITRAN (Citations/year)
-papers not in HITRAN (citations/year)
-
-Needs percentage plot
